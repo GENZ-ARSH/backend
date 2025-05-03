@@ -117,9 +117,7 @@ const commandsList = [
     '/contribute - Contribute to GenZZ',
     '/feedback - Submit feedback',
     '/updates - Get latest updates',
-    '/community
-
-System: Join our community',
+    '/community - System: Join our community',
     '/bug - Report a bug',
     '/request - Request a book or resource'
 ];
