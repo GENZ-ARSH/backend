@@ -10,6 +10,7 @@
   "author": "GenZZ Coders",
   "license": "MIT",
   "dependencies": {
+    "axios": "^1.9.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "csurf": "^1.2.2",
