@@ -10,18 +10,26 @@ const helmet = require('helmet');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const MONGODB_URI = process.env.MONGO_URI || 'mongodb+srv://arshtyagi007:6RiTmTYWMfstWitu@genzcluster.le9k61p.mongodb.net/?retryWrites=true&w=majority&appName=genzcluster';
-const JWT_SECRET = process.env.JWT_SECRET || 'KmnvZZ7ZtGLojL4EfpbWZpsXCwfw3H/luVQioc72LZc=';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'GENZCODERSAREKING';
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8058056838:AAHaqkdRxVqgyQrsqa2-MqoYZaeK0I9H30M';
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '-1002562154053';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000'; // Added frontend URL
+
+// Environment Variables (set these in Render dashboard)
+const MONGODB_URI = process.env.MONGO_URI;
+const JWT_SECRET = process.env.JWT_SECRET;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const NODE_ENV = process.env.NODE_ENV || 'production';
+
+// Validate environment variables
+if (!MONGODB_URI || !JWT_SECRET || !ADMIN_PASSWORD || !TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+    console.error('Missing required environment variables');
+    process.exit(1);
+}
 
 // Middleware
 app.use(helmet());
 app.use(cors({
-    origin: 'https://your-frontend-domain.com',
+    origin: '*', // Temporary for testing, update to Netlify URL after deployment
     credentials: true
 }));
 app.use(express.json());
@@ -31,7 +39,7 @@ app.use(rateLimit({
     max: 100
 }));
 
-// MongoDB Connection (removed deprecated options)
+// MongoDB Connection
 mongoose.connect(MONGODB_URI)
     .then(() => console.log('Connected to MongoDB'))
     .catch(err => console.error('MongoDB connection error:', err));
@@ -109,7 +117,9 @@ const commandsList = [
     '/contribute - Contribute to GenZZ',
     '/feedback - Submit feedback',
     '/updates - Get latest updates',
-    '/community - Join our community',
+    '/community
+
+System: Join our community',
     '/bug - Report a bug',
     '/request - Request a book or resource'
 ];
@@ -123,7 +133,6 @@ function generateCsrfToken() {
 function verifyToken(req, res, next) {
     const token = req.cookies.token;
     if (!token) {
-        // Allow direct access for now
         req.user = { access: true };
         return next();
     }
@@ -144,9 +153,14 @@ async function sendTelegramMessage(message) {
             text: message
         });
     } catch (error) {
-        console.error('Telegram message failed:', error);
+        console.error('Telegram message failed:', err);
     }
 }
+
+// Root Route to Avoid "Cannot GET /" Error
+app.get('/', (req, res) => {
+    res.json({ message: 'Bhai, backend live hai! APIs ke liye /api/... use kar. 🚀' });
+});
 
 // Routes
 
@@ -181,7 +195,7 @@ app.post('/api/admin/login', async (req, res) => {
     try {
         const token = jwt.sign({ isAdmin: true }, JWT_SECRET, { expiresIn: '1h' });
         res.cookie('isAdmin', 'true', { httpOnly: true, secure: NODE_ENV === 'production', sameSite: 'strict' });
-        res.json({ success: true, token, redirect: 'https://your-frontend-domain.com/admin.html' });
+        res.json({ success: true, token, redirect: `${FRONTEND_URL}/admin.html` });
     } catch (error) {
         res.status(500).json({ error: 'Admin login failed' });
     }
@@ -320,7 +334,7 @@ app.post('/api/chat', async (req, res) => {
             const password = message.split(' ')[1];
             if (password === ADMIN_PASSWORD) {
                 const token = jwt.sign({ isAdmin: true }, JWT_SECRET, { expiresIn: '1h' });
-                return res.json({ response: 'Admin login successful! Redirecting to admin panel...', token, redirect: 'https://your-frontend-domain.com/admin.html' });
+                return res.json({ response: 'Admin login successful! Redirecting to admin panel...', token, redirect: `${FRONTEND_URL}/admin.html` });
             } else {
                 return res.json({ response: `Invalid admin password! Try again or contact support: https://t.me/genzcoders1${commandsMessage}` });
             }
@@ -341,7 +355,7 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-// Reviews (from home.js)
+// Reviews
 app.post('/api/reviews', async (req, res) => {
     const { rating, comment, _csrf } = req.body;
     const csrfToken = req.headers['x-csrf-token'];
