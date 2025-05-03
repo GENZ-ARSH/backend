@@ -31,8 +31,8 @@ app.use(rateLimit({
     max: 100
 }));
 
-// MongoDB Connection
-mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+// MongoDB Connection (removed deprecated options)
+mongoose.connect(MONGODB_URI)
     .then(() => console.log('Connected to MongoDB'))
     .catch(err => console.error('MongoDB connection error:', err));
 
